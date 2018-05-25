@@ -17,17 +17,17 @@ void generate(void)
 void main(void)
 {
 	FILE *key;//ключ
-	FILE *res_f = fopen("rezult","w");//результат шифрования
+	FILE *res_f;//результат шифрования
 	int p_chiper[2];//труба для ключа
 	int p_file[2];//труба для файла
-	int chip, result = 0;//хм, дескрипторы для ключа и результа?????
-	char data, buf, buf1, name[256];//чар?0 зачем??
-	size_t n, n1, n2;//для размеров???
+	//int data,chip, result = 0;//для посимвольного чтения и записи после XOR
+	char data, chip, result, buf, buf1, name[256];//для хранения значения из файла
+	size_t n;//для проверки на чтение
 
 	write(1, "Ecrypt(1) или decrypt(2)?\n", 29);
 	read(0, &buf, 1);
 	read(0, &buf1, 1);
-	if ((buf != '1')&&(buf != 1)) {
+	if ((buf != '1')&&(buf != '2')) {
 		printf("Error reading1");
 		exit(1);
 	}
@@ -38,14 +38,32 @@ void main(void)
 		exit(1);
 	}
 	name[n-1] = '\0';
-
+	
 	if (buf == '1') {
-		key = fopen("chip","w");//key-file
+		key = fopen("chip", "w");//key-file
 		if (key == NULL) {
 			printf("Could not create encrypt-file\n");
 			exit(1);
 		}
+		res_f = fopen("rezult","w");
+		if (res_f == NULL) {
+			printf("Could not create key-file\n");
+			exit(1);
+		}
 	}
+	if (buf == '2') {
+		key = fopen(name, "w");//key-file
+		if (key == NULL) {
+			printf("Could not create decrypt-file\n");
+			exit(1);
+		}
+		res_f = fopen("rezult","r");
+		if (res_f == NULL) {
+			printf("Could not create key-file\n");
+			exit(1);
+		}
+	}
+
 	if (pipe(p_chiper) != 0) {//open key-pipe
 		printf("Could not create one of the pipes\n");
 		exit(1);
@@ -74,7 +92,7 @@ void main(void)
 			generate();
 		//Данная функция передает сгенерированный ключ
 		//На стандартный вывод, коем является p_chiper[1]
-		if (buf == '1')
+		if (buf == '2')
 			execlp("cat", "cat", "chip", NULL);
 	default://поток родитель
 		switch(fork())
@@ -90,20 +108,24 @@ void main(void)
 			close(p_file[1]);
 			close(p_chiper[0]);
 			close(p_chiper[1]);
-			execlp("cat", "cat", name, NULL);
+			if (buf == '1')
+				execlp("cat", "cat", name, NULL);
+			if (buf == '2')
+				execlp("cat", "cat", "rezult", NULL);
 		default://поток родитель в родителе
 			close(p_file[1]);
 			close(p_chiper[1]);
-			n2 = read(p_file[0], &data, 1);
-			while (n2 > 0) {
-				n1 = read(p_chiper[0], &chip, 1);
+			while (read(p_file[0], &data, 1) > 0) {
+				read(p_chiper[0], &chip, 1);
 				result = data ^ chip;
-				fputc(result, res_f);
-				if (buf == '1')
+				if (buf == '2')
+					fputc(result, key);
+				if (buf == '1') {
 					fputc(chip, key);
+					fputc(result, res_f);
+				}
 			}
-			if (buf == '1') 
-				fclose(key);					
+			fclose(key);					
 			fclose(res_f);
 		}
 	}
