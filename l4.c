@@ -7,9 +7,11 @@
 
 void generate(void)
 {
+	int c;
+
 	srand(time(NULL));
-        while (1) {
-		int c = rand() % 128;
+	while (1) {
+		c = rand() % 128;
 		putchar(c);
 	}
 }
@@ -20,14 +22,13 @@ void main(void)
 	FILE *res_f;//результат шифрования
 	int p_chiper[2];//труба для ключа
 	int p_file[2];//труба для файла
-	//int data,chip, result = 0;//для посимвольного чтения и записи после XOR
-	char data, chip, result, buf, buf1, name[256];//для хранения значения из файла
+	char data, chip, result, buf, buf1, name[256];
 	size_t n;//для проверки на чтение
 
 	write(1, "Ecrypt(1) или decrypt(2)?\n", 29);
 	read(0, &buf, 1);
 	read(0, &buf1, 1);
-	if ((buf != '1')&&(buf != '2')) {
+	if ((buf != '1') && (buf != '2')) {
 		printf("Error reading1");
 		exit(1);
 	}
@@ -38,14 +39,14 @@ void main(void)
 		exit(1);
 	}
 	name[n-1] = '\0';
-	
+
 	if (buf == '1') {
 		key = fopen("chip", "w");//key-file
 		if (key == NULL) {
 			printf("Could not create encrypt-file\n");
 			exit(1);
 		}
-		res_f = fopen("rezult","w");
+		res_f = fopen("rezult", "w");
 		if (res_f == NULL) {
 			printf("Could not create key-file\n");
 			exit(1);
@@ -57,7 +58,7 @@ void main(void)
 			printf("Could not create decrypt-file\n");
 			exit(1);
 		}
-		res_f = fopen("rezult","r");
+		res_f = fopen("rezult", "r");
 		if (res_f == NULL) {
 			printf("Could not create key-file\n");
 			exit(1);
@@ -73,38 +74,31 @@ void main(void)
 		exit(1);
 	}
 
-	switch(fork())
-	{
+	switch (fork()) {
 	case -1:
 		printf("fork() failed\n");
 		exit(1);
 	case 0://поток детё
-		close(1);
-		//Закрыли поток, будем перенаправлять
-		dup(p_chiper[1]);//дублируем файловый дескриптор
-		//Перенаправление вывода одного конца трубы-ключа
-		close(p_chiper[0]);
-		close(p_chiper[1]);
-		close(p_file[0]);
-		close(p_file[1]);
-		
+		close(1);//Закрыли поток
+		dup(p_chiper[1]);//дублируем файл дескр
+		close(p_chiper[0]);//Перенаправление
+		close(p_chiper[1]);//вывода одного
+		close(p_file[0]);//конца
+		close(p_file[1]);//трубы-ключа
+
 		if (buf == '1')
-			generate();
-		//Данная функция передает сгенерированный ключ
-		//На стандартный вывод, коем является p_chiper[1]
+			generate();//send  gen-key on standr vivod
 		if (buf == '2')
 			execlp("cat", "cat", "chip", NULL);
 	default://поток родитель
-		switch(fork())
-		{
+		switch (fork()) {
 		case -1:
 			printf("fork() failed\n");
 			exit(1);
 		case 0://поток дитё в родителе
 			close(1);
-			dup(p_file[1]);
-			//Перенаправление вывода
-			close(p_file[0]);
+			dup(p_file[1]);//Перенаправление
+			close(p_file[0]);//вывода
 			close(p_file[1]);
 			close(p_chiper[0]);
 			close(p_chiper[1]);
@@ -125,7 +119,7 @@ void main(void)
 					fputc(result, res_f);
 				}
 			}
-			fclose(key);					
+			fclose(key);
 			fclose(res_f);
 		}
 	}
