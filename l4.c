@@ -17,23 +17,24 @@ void generate(void)
 void main(void)
 {
 	FILE *key;//ключ
-	FILE *res_f = fopen("lll","w");//результат шифрования
+	FILE *res_f = fopen("rezult","w");//результат шифрования
 	int p_chiper[2];//труба для ключа
 	int p_file[2];//труба для файла
 	int chip, result = 0;//хм, дескрипторы для ключа и результа?????
-	char data, buf, name[256];//чар?0 зачем??
+	char data, buf, buf1, name[256];//чар?0 зачем??
 	size_t n, n1, n2;//для размеров???
 
-	write(1, "Ecrypt(1) или decrypt(2)?\n", 34);
+	write(1, "Ecrypt(1) или decrypt(2)?\n", 29);
 	read(0, &buf, 1);
-	if ((buf != '1')||(buf != '2')) {
-		printf("Error reading");
+	read(0, &buf1, 1);
+	if ((buf != '1')&&(buf != 1)) {
+		printf("Error reading1");
 		exit(1);
 	}
 	write(1, "What file name?\n", 16);
 	n = read(0, name, sizeof(name));
 	if (n < 1) {
-		printf("Error reading");
+		printf("Error reading2");
 		exit(1);
 	}
 	name[n-1] = '\0';
@@ -73,7 +74,7 @@ void main(void)
 			generate();
 		//Данная функция передает сгенерированный ключ
 		//На стандартный вывод, коем является p_chiper[1]
-		if (buf == '1') {
+		if (buf == '1')
 			execlp("cat", "cat", "chip", NULL);
 	default://поток родитель
 		switch(fork())
